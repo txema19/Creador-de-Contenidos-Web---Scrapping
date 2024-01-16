@@ -41,7 +41,7 @@ def conectar_bd():
 
   return conexion
 
-
+#Metodo para cargar la lista de urls
 def cargar_urls():
   try:
     conexion = conectar_bd()
@@ -59,8 +59,8 @@ def cargar_urls():
     if conexion:
       conexion.close()
 
+#Metodo para insertar en la bdd
 def insertar(label,datos,url,conexion):
-
   cursor = conexion.cursor()
   try:
     cursor.execute(f"SELECT * FROM {label} WHERE url = ? AND datos = ?", (url, datos))
@@ -70,7 +70,7 @@ def insertar(label,datos,url,conexion):
   except sqlite3.Error as e:
     print(f"Error al insertar en la tabla {label}: {e}")
 
-
+#Metodo para scrappear el contenido en la url
 def scrapping(labels, url):
   conexion = conectar_bd()
   cursor = conexion.cursor()
@@ -99,8 +99,7 @@ def scrapping(labels, url):
   
   conexion.close()
 
-import sqlite3
-
+#Metodo para buscar el termino dado en la bdd
 def buscartermino(termino):
     resultados = {}
     try:
@@ -121,6 +120,7 @@ def buscartermino(termino):
 
     return resultados
 
+#Metodo para generar el html
 def generar_html(resultados):
   html = """
     <!DOCTYPE html>
@@ -153,6 +153,7 @@ def generar_html(resultados):
   """
   return html
 
+#Metodo del botón raspar
 def raspar():
     url = entry_url.get()
     scrapping(labels,url)
@@ -162,10 +163,11 @@ def raspar():
     area_urls.update_idletasks()
     area_urls.config(state=tk.DISABLED)
 
+#Metodo del botón generar
 def generar():
     file=os.path.join(os.path.abspath(os.path.dirname(__file__)), "resultados_busqueda.html")
     tematica = entry_tematica.get()
-    # Aquí iría el código para generar el contenido según la temática
+    
     if len(tematica) == 0:
         mensaje.config(text='Introuce un tema')
     else:
@@ -175,11 +177,12 @@ def generar():
         with open(file, "w", encoding="utf-8") as archivo:
             archivo.write(html_resultados)
 
+#VENTANA
 root = tk.Tk()
 root.title('Raspador y Generador')
 
-root.geometry('440x300+100+200') #Tamaño de la ventana
-root.resizable(0,0) #No se puede cambiar el ancho y el alto
+root.geometry('440x300+100+200') 
+root.resizable(0,0)
 
 # URL
 label_url = tk.Label(root, text='URL:')
@@ -210,5 +213,7 @@ entry_tematica.grid(row=4, column=1, padx=10, pady=10, sticky='w')
 button_generar = tk.Button(root, text='GENERAR', command=generar)
 button_generar.grid(row=4, column=2, padx=10, pady=10, sticky='w')
 
+#Llamada a la lista de urls
 cargar_urls()
+#Llamada al bucle principal
 root.mainloop()
