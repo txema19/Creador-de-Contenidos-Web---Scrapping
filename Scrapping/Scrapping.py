@@ -104,7 +104,7 @@ import sqlite3
 def buscartermino(termino):
     resultados = {}
     try:
-        conexion = sqlite3.connect('scrapping.db')
+        conexion = conectar_bd()
         cursor = conexion.cursor()
 
         for label in labels:
@@ -163,6 +163,7 @@ def raspar():
     area_urls.config(state=tk.DISABLED)
 
 def generar():
+    file=os.path.join(os.path.abspath(os.path.dirname(__file__)), "resultados_busqueda.html")
     tematica = entry_tematica.get()
     # Aquí iría el código para generar el contenido según la temática
     if len(tematica) == 0:
@@ -171,7 +172,7 @@ def generar():
         mensaje.config(text='Generando contenido...')
         resultados = buscartermino(tematica)
         html_resultados = generar_html(resultados)
-        with open("resultados_busqueda.html", "w", encoding="utf-8") as archivo:
+        with open(file, "w", encoding="utf-8") as archivo:
             archivo.write(html_resultados)
 
 root = tk.Tk()
