@@ -41,6 +41,7 @@ def conectar_bd():
 
   return conexion
 
+
 #Metodo para cargar la lista de urls
 def cargar_urls():
   try:
@@ -101,24 +102,24 @@ def scrapping(labels, url):
 
 #Metodo para buscar el termino dado en la bdd
 def buscartermino(termino):
-    resultados = {}
-    try:
-        conexion = conectar_bd()
-        cursor = conexion.cursor()
+  resultados = {}
+  try:
+    conexion = conectar_bd()
+    cursor = conexion.cursor()
 
-        for label in labels:
-            cursor.execute(
-                f"SELECT *, LENGTH(datos) - LENGTH(REPLACE(datos, ?, '')) as coincidencias FROM {label} WHERE UPPER(datos) LIKE UPPER(?) ORDER BY coincidencias DESC LIMIT 5",
-                ('%' + termino + '%','%' + termino + '%')
-            )
-            resultados[label] = cursor.fetchall()
-            
-    except sqlite3.Error as e:
-        print(f"Error al buscar en la base de datos: {e}")
-    finally:
-        conexion.close()
+    for label in labels:
+      cursor.execute(
+          f"SELECT *, LENGTH(datos) - LENGTH(REPLACE(datos, ?, '')) as coincidencias FROM {label} WHERE UPPER(datos) LIKE UPPER(?) ORDER BY coincidencias DESC LIMIT 5",
+          ('%' + termino + '%','%' + termino + '%')
+      )
+      resultados[label] = cursor.fetchall()
+          
+  except sqlite3.Error as e:
+    print(f"Error al buscar en la base de datos: {e}")
+  finally:
+    conexion.close()
 
-    return resultados
+  return resultados
 
 #Metodo para generar el html
 def generar_html(resultados):
@@ -153,15 +154,27 @@ def generar_html(resultados):
   """
   return html
 
+#Metodo para validar que la página existe
+def pagina_existe(url):
+  try:
+    response = requests.get(url)
+    return response.status_code == 200
+  except requests.RequestException:
+    return False
+
 #Metodo del botón raspar
 def raspar():
-    url = entry_url.get()
-    scrapping(labels,url)
-
+  url = entry_url.get()
+  if not pagina_existe(url):
+    print(f"La página {url} no existe.")
+    return
+  scrapping(labels,url)
+  if url not in area_urls.get("1.0", tk.END): #Comprobamos que la url no esté en la lista antes de agregarla
     area_urls.config(state=tk.NORMAL)
     area_urls.insert(tk.END, url + '\n')
     area_urls.update_idletasks()
     area_urls.config(state=tk.DISABLED)
+  mensaje.config(text='Pagina raspada.')
 
 #Metodo del botón generar
 def generar():
@@ -171,17 +184,17 @@ def generar():
     if len(tematica) == 0:
         mensaje.config(text='Introuce un tema')
     else:
-        mensaje.config(text='Generando contenido...')
         resultados = buscartermino(tematica)
         html_resultados = generar_html(resultados)
         with open(file, "w", encoding="utf-8") as archivo:
             archivo.write(html_resultados)
+        mensaje.config(text='Contenido generado.')
 
 #VENTANA
 root = tk.Tk()
 root.title('Raspador y Generador')
 
-root.geometry('440x300+100+200') 
+root.geometry('440x300+100+200')
 root.resizable(0,0)
 
 # URL
